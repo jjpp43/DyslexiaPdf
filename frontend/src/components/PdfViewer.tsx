@@ -34,6 +34,17 @@ const DEFAULT_STYLE: DocStyle = {
   blurEnabled: false,
 }
 
+type Element = {
+  type: 'text_block' | 'image' | 'table'
+  block_type?: string
+  gemini_text?: string
+  bbox: [number, number, number, number]
+  column: number
+  lines?: { spans: { text: string; size: number; bold: boolean; italic: boolean }[] }[]
+  src?: string
+  rows?: (string | null)[][]
+}
+
 type PageData = {
   page_number: number
   page_data: {
@@ -41,7 +52,7 @@ type PageData = {
     width: number
     height: number
     layout: string
-    elements: unknown[]
+    elements: Element[]
   }
 }
 
