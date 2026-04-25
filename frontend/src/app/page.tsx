@@ -1,18 +1,33 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/auth/actions";
-import { UploadSimple, MagicWand, BookOpenText, TextAa, Lightning, CloudArrowUp, LockSimple, TreeStructure, Sliders } from "@phosphor-icons/react/dist/ssr";
+import {
+  UploadSimple,
+  MagicWand,
+  BookOpenText,
+  TextAa,
+  Lightning,
+  CloudArrowUp,
+  LockSimple,
+  TreeStructure,
+  Sliders,
+} from "@phosphor-icons/react/dist/ssr";
 
 export default async function LandingPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       {/* Fixed nav */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-[var(--border-light)] bg-[var(--background)]/90 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="text-xs font-bold tracking-widest uppercase hover:opacity-60 transition-opacity duration-100">
+        <div className="max-w-6xl mx-auto px-10 md:px-16 h-14 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xs font-bold tracking-widest uppercase hover:opacity-60 transition-opacity duration-100"
+          >
             PDFReader
           </Link>
           <div className="flex items-center gap-6">
@@ -48,7 +63,7 @@ export default async function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="texture-lines relative pt-40 pb-32 px-6 overflow-hidden">
+      <section className="texture-lines relative pt-40 pb-32 px-10 md:px-16 overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <span className="text-xs tracking-widest uppercase font-bold border border-[var(--accent)] px-3 py-1.5 text-[var(--accent)] rounded-[var(--radius-sm)]">
@@ -61,7 +76,9 @@ export default async function LandingPage() {
             style={{ fontSize: "clamp(3rem, 9vw, 8rem)" }}
           >
             <span className="hover:bg-[var(--muted)] transition-colors duration-200 [box-decoration-break:clone] [-webkit-box-decoration-break:clone] px-1">
-              Read<br />differently.
+              Read
+              <br />
+              differently.
             </span>
           </h1>
 
@@ -80,14 +97,14 @@ export default async function LandingPage() {
             {user ? (
               <Link
                 href="/app"
-                className="text-xs tracking-widest uppercase font-bold px-8 py-4 bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--background)] hover:text-[var(--accent)] border-2 border-[var(--accent)] transition-colors duration-100 rounded-[var(--radius-sm)]"
+                className="border-dot text-sm tracking-widest uppercase font-bold px-8 py-5 bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--background)] hover:text-[var(--accent)] border-2 border-[var(--accent)] transition-colors duration-100 rounded-[var(--radius-sm)]"
               >
                 Open workspace →
               </Link>
             ) : (
               <Link
                 href="/signup"
-                className="text-xs tracking-widest uppercase font-bold px-8 py-4 bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--background)] hover:text-[var(--accent)] border-2 border-[var(--accent)] transition-colors duration-100 rounded-[var(--radius-sm)]"
+                className="border-dot text-xs tracking-widest uppercase font-bold px-8 py-4 bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--background)] hover:text-[var(--accent)] border-2 border-[var(--accent)] transition-colors duration-100 rounded-[var(--radius-sm)]"
               >
                 Get started free →
               </Link>
@@ -100,7 +117,7 @@ export default async function LandingPage() {
       <div className="h-1 bg-[var(--foreground)]" />
 
       {/* How it works */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-10 md:px-16">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16">
             <p className="text-xs tracking-widest uppercase font-bold text-[var(--muted-foreground)] mb-4">
@@ -108,7 +125,9 @@ export default async function LandingPage() {
             </p>
             <h2 className="text-5xl md:text-6xl font-bold tracking-tighter leading-[1.17]">
               <span className="hover:bg-[var(--muted)] transition-colors duration-200 [box-decoration-break:clone] [-webkit-box-decoration-break:clone] px-1">
-                Three steps<br />to clarity.
+                Three steps
+                <br />
+                to clarity.
               </span>
             </h2>
           </div>
@@ -116,30 +135,42 @@ export default async function LandingPage() {
           <div className="flex flex-row items-center gap-6">
             <div className="flex-1 flex flex-col gap-4">
               <UploadSimple size={40} weight="light" color="var(--accent)" />
-              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">01</span>
+              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">
+                01
+              </span>
               <div className="w-10 h-0.5 bg-[var(--accent)]" />
               <h3 className="text-xl font-bold">{steps[0].title}</h3>
-              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{steps[0].description}</p>
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">
+                {steps[0].description}
+              </p>
             </div>
             <div className="flex items-center self-center flex-shrink-0 px-2">
               <span className="text-5xl font-bold text-[var(--accent)]">→</span>
             </div>
             <div className="flex-1 flex flex-col gap-4">
               <MagicWand size={40} weight="light" color="var(--accent)" />
-              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">02</span>
+              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">
+                02
+              </span>
               <div className="w-10 h-0.5 bg-[var(--accent)]" />
               <h3 className="text-xl font-bold">{steps[1].title}</h3>
-              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{steps[1].description}</p>
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">
+                {steps[1].description}
+              </p>
             </div>
             <div className="flex items-center self-center flex-shrink-0 px-2">
               <span className="text-5xl font-bold text-[var(--accent)]">→</span>
             </div>
             <div className="flex-1 flex flex-col gap-4">
               <BookOpenText size={40} weight="light" color="var(--accent)" />
-              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">03</span>
+              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">
+                03
+              </span>
               <div className="w-10 h-0.5 bg-[var(--accent)]" />
               <h3 className="text-xl font-bold">{steps[2].title}</h3>
-              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{steps[2].description}</p>
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">
+                {steps[2].description}
+              </p>
             </div>
           </div>
         </div>
@@ -149,7 +180,7 @@ export default async function LandingPage() {
       <div className="h-1 bg-[var(--foreground)]" />
 
       {/* Features */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-10 md:px-16">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16">
             <p className="text-xs tracking-widest uppercase font-bold text-[var(--muted-foreground)] mb-4">
@@ -157,7 +188,9 @@ export default async function LandingPage() {
             </p>
             <h2 className="text-5xl md:text-6xl font-bold tracking-tighter leading-[1.17]">
               <span className="hover:bg-[var(--muted)] transition-colors duration-200 [box-decoration-break:clone] [-webkit-box-decoration-break:clone] px-1">
-                Built for how<br />you read.
+                Built for how
+                <br />
+                you read.
               </span>
             </h2>
           </div>
@@ -193,7 +226,7 @@ export default async function LandingPage() {
       <div className="h-1 bg-[var(--foreground)]" />
 
       {/* Pricing */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-10 md:px-16">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16">
             <p className="text-xs tracking-widest uppercase font-bold text-[var(--muted-foreground)] mb-4">
@@ -201,7 +234,9 @@ export default async function LandingPage() {
             </p>
             <h2 className="text-5xl md:text-6xl font-bold tracking-tighter leading-[1.17]">
               <span className="hover:bg-[var(--muted)] transition-colors duration-200 [box-decoration-break:clone] [-webkit-box-decoration-break:clone] px-1">
-                Simple,<br />transparent.
+                Simple,
+                <br />
+                transparent.
               </span>
             </h2>
           </div>
@@ -283,7 +318,7 @@ export default async function LandingPage() {
       <div className="h-1 bg-[var(--foreground)]" />
 
       {/* Footer */}
-      <footer className="py-10 px-6">
+      <footer className="py-10 px-10 md:px-16">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <span className="text-xs font-bold tracking-widest uppercase">
             PDFReader
@@ -301,17 +336,20 @@ const steps = [
   {
     number: "01",
     title: "Upload your PDF",
-    description: "Drop in any PDF — research papers, textbooks, reports. We handle the rest.",
+    description:
+      "Drop in any PDF — research papers, textbooks, reports. We handle the rest.",
   },
   {
     number: "02",
     title: "Content gets structured",
-    description: "The document is automatically broken into sentences, with headings, tables, and images all preserved.",
+    description:
+      "The document is automatically broken into sentences, with headings, tables, and images all preserved.",
   },
   {
     number: "03",
     title: "Read comfortably",
-    description: "Navigate a clean reading view with dyslexia-friendly fonts, spacing, and focus controls tailored to you.",
+    description:
+      "Navigate a clean reading view with dyslexia-friendly fonts, spacing, and focus controls tailored to you.",
   },
 ];
 
@@ -321,7 +359,7 @@ const features = [
     icon: TextAa,
     title: "Dyslexia-friendly layout",
     description:
-      "Documents are reformatted using Atkinson Hyperlegible — a font specifically designed for readers with dyslexia.",
+      "Pick any font and reformat your document into a layout that works for you.",
   },
   {
     tag: "02",

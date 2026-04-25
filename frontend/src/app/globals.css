@@ -90,6 +90,65 @@ input[type='range']::-moz-range-thumb {
   background: var(--accent);
 }
 
+/* Running dot around button border */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-dot-spin {
+  to { --border-angle: 360deg; }
+}
+
+.border-dot {
+  position: relative;
+  box-shadow:
+    0 0 12px var(--accent),
+    0 0 32px var(--accent),
+    0 0 64px color-mix(in srgb, var(--accent) 50%, transparent);
+  animation: neon-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 12px var(--accent),
+      0 0 32px var(--accent),
+      0 0 64px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 20px var(--accent),
+      0 0 50px var(--accent),
+      0 0 100px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
+.border-dot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 0%,
+    transparent 75%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 82%,
+    white 90%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 98%,
+    transparent 100%
+  );
+  animation: border-dot-spin 2.5s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 2px;
+  pointer-events: none;
+}
+
 /* Subtle horizontal line texture — adapts to dark/light via color-mix */
 .texture-lines {
   background-image: repeating-linear-gradient(
