@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/auth/actions";
+import { UploadSimple, MagicWand, BookOpenText, TextAa, Lightning, CloudArrowUp, LockSimple, TreeStructure, Sliders } from "@phosphor-icons/react/dist/ssr";
 
 export default async function LandingPage() {
   const supabase = await createClient();
@@ -114,6 +115,7 @@ export default async function LandingPage() {
 
           <div className="flex flex-row items-center gap-6">
             <div className="flex-1 flex flex-col gap-4">
+              <UploadSimple size={40} weight="light" color="var(--accent)" />
               <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">01</span>
               <div className="w-10 h-0.5 bg-[var(--accent)]" />
               <h3 className="text-xl font-bold">{steps[0].title}</h3>
@@ -123,6 +125,7 @@ export default async function LandingPage() {
               <span className="text-5xl font-bold text-[var(--accent)]">→</span>
             </div>
             <div className="flex-1 flex flex-col gap-4">
+              <MagicWand size={40} weight="light" color="var(--accent)" />
               <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">02</span>
               <div className="w-10 h-0.5 bg-[var(--accent)]" />
               <h3 className="text-xl font-bold">{steps[1].title}</h3>
@@ -132,6 +135,7 @@ export default async function LandingPage() {
               <span className="text-5xl font-bold text-[var(--accent)]">→</span>
             </div>
             <div className="flex-1 flex flex-col gap-4">
+              <BookOpenText size={40} weight="light" color="var(--accent)" />
               <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">03</span>
               <div className="w-10 h-0.5 bg-[var(--accent)]" />
               <h3 className="text-xl font-bold">{steps[2].title}</h3>
@@ -166,7 +170,10 @@ export default async function LandingPage() {
                   key={f.title}
                   className="group p-8 bg-[var(--background)] hover:bg-[var(--foreground)] transition-colors duration-100 cursor-default"
                 >
-                  <p className="text-xs tracking-widest uppercase font-bold text-[var(--accent)] group-hover:text-[var(--background)]/50 mb-5 transition-colors duration-100">
+                  <div className="mb-5 text-[var(--muted-foreground)] group-hover:text-[var(--background)] transition-colors duration-100">
+                    <f.icon size={28} weight="light" />
+                  </div>
+                  <p className="text-xs tracking-widest uppercase font-bold text-[var(--accent)] group-hover:text-[var(--background)]/50 mb-3 transition-colors duration-100">
                     {f.tag}
                   </p>
                   <h3 className="text-lg font-bold mb-3 group-hover:text-[var(--background)] transition-colors duration-100">
@@ -311,36 +318,42 @@ const steps = [
 const features = [
   {
     tag: "01",
+    icon: TextAa,
     title: "Dyslexia-friendly layout",
     description:
       "Documents are reformatted using Atkinson Hyperlegible — a font specifically designed for readers with dyslexia.",
   },
   {
     tag: "02",
+    icon: Lightning,
     title: "Instant parsing",
     description:
       "Upload a PDF and get a clean, structured reading view in seconds. No waiting, no fuss.",
   },
   {
     tag: "03",
+    icon: CloudArrowUp,
     title: "Cloud storage",
     description:
       "Your documents are stored securely and are accessible from any device at any time.",
   },
   {
     tag: "04",
+    icon: LockSimple,
     title: "Private & secure",
     description:
       "Your files are encrypted and only accessible by you. We never share or sell your data.",
   },
   {
     tag: "05",
+    icon: TreeStructure,
     title: "Preserves structure",
     description:
       "Headings, paragraphs, and page breaks are preserved so you never lose context.",
   },
   {
     tag: "06",
+    icon: Sliders,
     title: "Fully customizable",
     description:
       "Adjust font, size, spacing, and colors to match exactly how your brain prefers to read.",
