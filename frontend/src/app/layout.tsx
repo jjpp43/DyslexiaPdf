@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const atkinson = Atkinson_Hyperlegible({
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${atkinson.variable} antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
