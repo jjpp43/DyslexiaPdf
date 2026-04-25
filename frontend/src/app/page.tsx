@@ -98,6 +98,52 @@ export default async function LandingPage() {
       {/* Section rule */}
       <div className="h-1 bg-[var(--foreground)]" />
 
+      {/* How it works */}
+      <section className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-16">
+            <p className="text-xs tracking-widest uppercase font-bold text-[var(--muted-foreground)] mb-4">
+              How it works
+            </p>
+            <h2 className="text-5xl md:text-6xl font-bold tracking-tighter leading-[1.17]">
+              <span className="hover:bg-[var(--muted)] transition-colors duration-200 [box-decoration-break:clone] [-webkit-box-decoration-break:clone] px-1">
+                Three steps<br />to clarity.
+              </span>
+            </h2>
+          </div>
+
+          <div className="flex flex-row items-center gap-6">
+            <div className="flex-1 flex flex-col gap-4">
+              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">01</span>
+              <div className="w-10 h-0.5 bg-[var(--accent)]" />
+              <h3 className="text-xl font-bold">{steps[0].title}</h3>
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{steps[0].description}</p>
+            </div>
+            <div className="flex items-center self-center flex-shrink-0 px-2">
+              <span className="text-5xl font-bold text-[var(--accent)]">→</span>
+            </div>
+            <div className="flex-1 flex flex-col gap-4">
+              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">02</span>
+              <div className="w-10 h-0.5 bg-[var(--accent)]" />
+              <h3 className="text-xl font-bold">{steps[1].title}</h3>
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{steps[1].description}</p>
+            </div>
+            <div className="flex items-center self-center flex-shrink-0 px-2">
+              <span className="text-5xl font-bold text-[var(--accent)]">→</span>
+            </div>
+            <div className="flex-1 flex flex-col gap-4">
+              <span className="text-6xl font-bold tracking-tighter text-[var(--accent)] leading-none">03</span>
+              <div className="w-10 h-0.5 bg-[var(--accent)]" />
+              <h3 className="text-xl font-bold">{steps[2].title}</h3>
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{steps[2].description}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section rule */}
+      <div className="h-1 bg-[var(--foreground)]" />
+
       {/* Features */}
       <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
@@ -120,7 +166,7 @@ export default async function LandingPage() {
                   key={f.title}
                   className="group p-8 bg-[var(--background)] hover:bg-[var(--foreground)] transition-colors duration-100 cursor-default"
                 >
-                  <p className="text-xs tracking-widest uppercase font-bold text-[var(--muted-foreground)] group-hover:text-[var(--background)]/50 mb-5 transition-colors duration-100">
+                  <p className="text-xs tracking-widest uppercase font-bold text-[var(--accent)] group-hover:text-[var(--background)]/50 mb-5 transition-colors duration-100">
                     {f.tag}
                   </p>
                   <h3 className="text-lg font-bold mb-3 group-hover:text-[var(--background)] transition-colors duration-100">
@@ -243,6 +289,24 @@ export default async function LandingPage() {
     </div>
   );
 }
+
+const steps = [
+  {
+    number: "01",
+    title: "Upload your PDF",
+    description: "Drop in any PDF — research papers, textbooks, reports. We handle the rest.",
+  },
+  {
+    number: "02",
+    title: "Content gets structured",
+    description: "The document is automatically broken into sentences, with headings, tables, and images all preserved.",
+  },
+  {
+    number: "03",
+    title: "Read comfortably",
+    description: "Navigate a clean reading view with dyslexia-friendly fonts, spacing, and focus controls tailored to you.",
+  },
+];
 
 const features = [
   {

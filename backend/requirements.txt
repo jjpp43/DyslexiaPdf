@@ -118,8 +118,7 @@ sympy==1.14.0
 tabulate==0.10.0
 tenacity==9.1.4
 tokenizers==0.22.2
-torch==2.10.0
-torchvision==0.25.0
+# torch and torchvision installed via Dockerfile with CPU-only build
 tqdm==4.67.3
 transformers==4.57.6
 tree-sitter==0.25.2
