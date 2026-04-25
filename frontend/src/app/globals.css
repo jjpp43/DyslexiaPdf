@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAF9;
-  --foreground: #1C1917;
-  --muted: #F0EDEA;
-  --muted-foreground: #78716C;
-  --border: #1C1917;
-  --border-light: #D6D3D1;
-  --sidebar-bg: #F5F4F2;
-  --sidebar-border: #D6D3D1;
-  --toolbar-bg: #FAFAF9;
-  --toolbar-border: #D6D3D1;
+  color-scheme: dark;
+  --background: #1C1917;
+  --foreground: #F5F4F2;
+  --muted: #292524;
+  --muted-foreground: #A8A29E;
+  --border: #F5F4F2;
+  --border-light: #44403C;
+  --sidebar-bg: #141210;
+  --sidebar-border: #44403C;
+  --toolbar-bg: #1C1917;
+  --toolbar-border: #44403C;
   --radius: 5px;
   --radius-sm: 3px;
-  --accent: #0F766E;
-  --accent-foreground: #FAFAF9;
+  --accent: #F59E0B;
+  --accent-foreground: #1C1917;
+  --accent-subtle: #3D2E00;
+  --accent-border: #D97706;
 }
 
 @theme inline {
@@ -22,24 +25,9 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-border: var(--accent-border);
   --font-sans: var(--font-atkinson);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1C1917;
-    --foreground: #F5F4F2;
-    --muted: #292524;
-    --muted-foreground: #A8A29E;
-    --border: #F5F4F2;
-    --border-light: #44403C;
-    --sidebar-bg: #141210;
-    --sidebar-border: #44403C;
-    --toolbar-bg: #1C1917;
-    --toolbar-border: #44403C;
-    --accent: #14B8A6;
-    --accent-foreground: #1C1917;
-  }
 }
 
 * {
@@ -51,6 +39,55 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, sans-serif;
   margin: 0;
+}
+
+/* Range slider styling */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--slider-pct, 0%),
+    var(--border-light) var(--slider-pct, 0%)
+  );
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: -6px;
+  transition: transform 0.1s;
+}
+input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+input[type='range']::-moz-range-track {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--slider-pct, 0%),
+    var(--border-light) var(--slider-pct, 0%)
+  );
+}
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
 }
 
 /* Subtle horizontal line texture — adapts to dark/light via color-mix */

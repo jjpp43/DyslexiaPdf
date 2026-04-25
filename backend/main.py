@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import parse
+from routers import parse, sentences
 from dotenv import load_dotenv
 import os
 
@@ -17,6 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(parse.router)
+app.include_router(sentences.router)
 
 @app.get("/health")
 def health():

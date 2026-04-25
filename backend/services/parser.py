@@ -9,6 +9,7 @@ from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.datamodel.base_models import InputFormat
 from docling.document_converter import PdfFormatOption
 from docling_core.types.doc import DocItemLabel
+from services.llm import classify_blocks
 
 # Initialise converter once (models are cached after first download)
 _converter = None
@@ -110,24 +111,13 @@ def assign_columns(elements: list[dict], page_width: float, layout: str) -> list
     return elements
 
 
-def parse_pdf(pdf_bytes: bytes) -> dict[str, Any]:
-    images_by_page = extract_images_by_page(pdf_bytes)
-
-    # Write to temp file for Docling
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
-        f.write(pdf_bytes)
-        tmp_path = f.name
-
-    try:
-        result = get_converter().convert(tmp_path)
-    finally:
-        os.unlink(tmp_path)
-
-    doc = result.document
+def _docling_to_pages_map(doc, target_pages: set[int] | None = None) -> dict[int, dict]:
+    """Convert a Docling document to our pages_map structure, optionally filtering to specific pages."""
     pages_map: dict[int, dict] = {}
 
-    # Collect page sizes
     for page_no, page in doc.pages.items():
+        if target_pages and page_no not in target_pages:
+            continue
         pages_map[page_no] = {
             "page_number": page_no,
             "width": round(page.size.width, 2) if page.size else 612,
@@ -135,17 +125,13 @@ def parse_pdf(pdf_bytes: bytes) -> dict[str, Any]:
             "elements": [],
         }
 
-    # Iterate all document items
     for item, _ in doc.iterate_items():
         label = getattr(item, "label", None)
         if label is None:
             continue
-
-        # Get provenance (page + bbox)
         prov = item.prov[0] if item.prov else None
         if not prov:
             continue
-
         page_no = prov.page_no
         if page_no not in pages_map:
             continue
@@ -161,17 +147,11 @@ def parse_pdf(pdf_bytes: bytes) -> dict[str, Any]:
             except Exception:
                 rows = []
             pages_map[page_no]["elements"].append({
-                "type": "table",
-                "block_type": "table",
-                "bbox": bbox,
-                "column": 0,
-                "rows": rows,
+                "type": "table", "block_type": "table",
+                "bbox": bbox, "column": 0, "rows": rows,
             })
-
         elif label == DocItemLabel.PICTURE:
-            # Images are handled by PyMuPDF below
             pass
-
         else:
             text = item.text if hasattr(item, "text") else ""
             if not text.strip():
@@ -182,28 +162,40 @@ def parse_pdf(pdf_bytes: bytes) -> dict[str, Any]:
                 "gemini_text": text.strip(),
                 "bbox": bbox,
                 "column": 0,
-                # Minimal lines structure for fallback rendering
                 "lines": [{"spans": [{
-                    "text": text.strip(),
-                    "font": "",
+                    "text": text.strip(), "font": "",
                     "size": 16 if block_type == "heading" else 13 if block_type == "subheading" else 11,
                     "bold": block_type in ("heading", "subheading"),
-                    "italic": False,
-                    "color": "#000000",
-                    "bbox": bbox,
+                    "italic": False, "color": "#000000", "bbox": bbox,
                 }]}],
             })
 
-    # Merge images from PyMuPDF and finalise pages
+    return pages_map
+
+
+def _apply_gemini(pages_map: dict[int, dict]) -> None:
+    """Run classify_blocks (Gemini) on each page's elements in-place."""
+    for p in pages_map.values():
+        if not p["elements"]:
+            continue
+        results = classify_blocks(p["elements"])
+        for element, result in zip(p["elements"], results):
+            if element["type"] == "text_block":
+                element["block_type"] = result.get("block_type", element["block_type"])
+                if result.get("text"):
+                    element["gemini_text"] = result["text"]
+                    element["lines"][0]["spans"][0]["text"] = result["text"]
+
+
+def _finalise_pages(pages_map: dict[int, dict], images_by_page: dict[int, list]) -> list[dict]:
+    """Merge images, sort, detect columns, return sorted page list."""
     pages = []
     for page_no in sorted(pages_map.keys()):
         p = pages_map[page_no]
         elements = p["elements"] + images_by_page.get(page_no, [])
         elements.sort(key=lambda e: (round(e["bbox"][1] / 10), e["bbox"][0]))
-
         layout = detect_columns(elements, p["width"])
         elements = assign_columns(elements, p["width"], layout)
-
         pages.append({
             "page_number": p["page_number"],
             "width": p["width"],
@@ -211,5 +203,62 @@ def parse_pdf(pdf_bytes: bytes) -> dict[str, Any]:
             "layout": layout,
             "elements": elements,
         })
+    return pages
 
-    return {"page_count": len(pages), "pages": pages}
+
+def parse_single_page(pdf_bytes: bytes, page_number: int) -> dict:
+    """Parse a single page with Docling + Gemini. Returns one page dict."""
+    # Extract the target page into a fresh single-page PDF
+    src = fitz.open(stream=pdf_bytes, filetype="pdf")
+    dst = fitz.open()
+    dst.insert_pdf(src, from_page=page_number - 1, to_page=page_number - 1)
+    single_page_bytes = dst.tobytes()
+    src.close()
+    dst.close()
+
+    images = extract_images_by_page(pdf_bytes).get(page_number, [])
+
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        f.write(single_page_bytes)
+        tmp_path = f.name
+
+    try:
+        result = get_converter().convert(tmp_path)
+    finally:
+        os.unlink(tmp_path)
+
+    # Docling numbers the extracted page as page 1 — remap to original page_number
+    pages_map = _docling_to_pages_map(result.document)
+    remapped: dict[int, dict] = {}
+    for p in pages_map.values():
+        p["page_number"] = page_number
+        remapped[page_number] = p
+
+    _apply_gemini(remapped)
+    pages = _finalise_pages(remapped, {page_number: images})
+    return pages[0] if pages else {"page_number": page_number, "width": 612, "height": 792, "layout": "single", "elements": []}
+
+
+def parse_pdf(pdf_bytes: bytes, max_pages: int = 3) -> dict[str, Any]:
+    # Get true page count quickly without full parse
+    _doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    total_pages = len(_doc)
+    _doc.close()
+
+    images_by_page = extract_images_by_page(pdf_bytes)
+
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        f.write(pdf_bytes)
+        tmp_path = f.name
+
+    try:
+        result = get_converter().convert(tmp_path)
+    finally:
+        os.unlink(tmp_path)
+
+    target = set(range(1, max_pages + 1))
+    pages_map = _docling_to_pages_map(result.document, target_pages=target)
+    _apply_gemini(pages_map)
+    pages = _finalise_pages(pages_map, images_by_page)
+
+    return {"page_count": total_pages, "pages": pages}

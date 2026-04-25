@@ -53,8 +53,8 @@ function roundTo(val: number, step: number): number {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p style={{
-      fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase',
-      fontWeight: 700, color: 'var(--muted-foreground)', margin: '0 0 10px 0',
+      fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+      fontWeight: 700, color: '#DDD9D4', margin: '0 0 10px 0',
       userSelect: 'none',
     }}>
       {children}
@@ -70,7 +70,7 @@ function SectionDivider() {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-      <span style={{ fontSize: 11, color: 'var(--muted-foreground)', userSelect: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+      <span style={{ fontSize: 13, color: 'var(--muted-foreground)', userSelect: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
         {label}
       </span>
       {children}
@@ -82,7 +82,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function StackRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 10 }}>
-      <p style={{ fontSize: 11, color: 'var(--muted-foreground)', margin: '0 0 4px 0', userSelect: 'none' }}>
+      <p style={{ fontSize: 13, color: 'var(--muted-foreground)', margin: '0 0 4px 0', userSelect: 'none' }}>
         {label}
       </p>
       {children}
@@ -92,39 +92,27 @@ function StackRow({ label, children }: { label: string; children: React.ReactNod
 
 // ─── Controls ─────────────────────────────────────────────────────────────────
 
-/** [−] value [+] stepper */
-function Stepper({
+/** Horizontal slider with label + live value */
+function Slider({
   value, min, max, step, format, onChange,
 }: {
   value: number; min: number; max: number; step: number
   format: (v: number) => string
   onChange: (v: number) => void
 }) {
-  const btn: React.CSSProperties = {
-    width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'transparent', borderTop: 'none', borderBottom: 'none', borderRight: 'none', borderLeft: 'none',
-    cursor: 'pointer', color: 'var(--foreground)', fontSize: 16, lineHeight: 1,
-    flexShrink: 0, userSelect: 'none', transition: 'background 0.1s',
-  }
+  const pct = ((value - min) / (max - min)) * 100
   return (
-    <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-light)', background: 'var(--background)', flexShrink: 0, borderRadius: 'var(--radius-sm)' }}>
-      <button
-        style={{ ...btn, opacity: value <= min ? 0.3 : 1 }}
-        onClick={() => onChange(roundTo(Math.max(min, value - step), step))}
-        disabled={value <= min}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--muted)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-      >−</button>
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--foreground)', width: 44, textAlign: 'center', userSelect: 'none' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
+      <input
+        type="range"
+        min={min} max={max} step={step}
+        value={value}
+        onChange={e => onChange(roundTo(Number(e.target.value), step))}
+        style={{ flex: 1, margin: 0, '--slider-pct': `${pct}%` } as React.CSSProperties}
+      />
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--foreground)', minWidth: 38, textAlign: 'right', userSelect: 'none', flexShrink: 0 }}>
         {format(value)}
       </span>
-      <button
-        style={{ ...btn, opacity: value >= max ? 0.3 : 1 }}
-        onClick={() => onChange(roundTo(Math.min(max, value + step), step))}
-        disabled={value >= max}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--muted)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-      >+</button>
     </div>
   )
 }
@@ -144,11 +132,11 @@ function Segmented({
           key={opt.value}
           onClick={() => onChange(opt.value)}
           style={{
-            flex: 1, height: 28, fontSize: 10, fontWeight: 700, padding: '0 4px',
+            flex: 1, height: 28, fontSize: 12, fontWeight: 700, padding: '0 4px',
             borderTop: 'none', borderBottom: 'none', borderRight: 'none',
             borderLeft: i > 0 ? '1px solid var(--border-light)' : 'none',
-            background: value === opt.value ? 'var(--foreground)' : 'transparent',
-            color: value === opt.value ? 'var(--background)' : 'var(--foreground)',
+            background: value === opt.value ? 'var(--accent)' : 'transparent',
+            color: value === opt.value ? 'var(--accent-foreground)' : 'var(--foreground)',
             cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
             transition: 'background 0.1s, color 0.1s',
           }}
@@ -193,16 +181,16 @@ function Select({
         style={{
           width: '100%', height: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 8px',
-          background: open ? 'var(--foreground)' : 'var(--background)',
-          color: open ? 'var(--background)' : 'var(--foreground)',
+          background: open ? 'var(--accent)' : 'var(--background)',
+          color: open ? 'var(--accent-foreground)' : 'var(--foreground)',
           border: '1px solid var(--border-light)', cursor: 'pointer',
           borderRadius: open ? 'var(--radius-sm) var(--radius-sm) 0 0' : 'var(--radius-sm)',
-          fontSize: 11, fontFamily: showFontPreview ? value : 'inherit',
+          fontSize: 13, fontFamily: showFontPreview ? value : 'inherit',
           textAlign: 'left', transition: 'background 0.1s, color 0.1s',
         }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selected.label}</span>
-        <span style={{ fontSize: 8, opacity: 0.5, flexShrink: 0, marginLeft: 4 }}>▾</span>
+        <span style={{ fontSize: 10, opacity: 0.5, flexShrink: 0, marginLeft: 4 }}>▾</span>
       </button>
       {open && (
         <div style={{
@@ -219,10 +207,10 @@ function Select({
                 onClick={() => { onChange(opt.value); setOpen(false) }}
                 style={{
                   display: 'block', width: '100%', textAlign: 'left',
-                  padding: '7px 10px', fontSize: 11,
+                  padding: '7px 10px', fontSize: 13,
                   fontFamily: showFontPreview ? opt.value : 'inherit',
                   fontWeight: isSelected ? 700 : 400,
-                  background: isSelected ? 'var(--muted)' : 'transparent',
+                  background: isSelected ? 'var(--accent-subtle)' : 'transparent',
                   color: 'var(--foreground)', border: 'none', cursor: 'pointer',
                   transition: 'background 0.1s',
                 }}
@@ -271,46 +259,37 @@ export default function ReadingPanel({
       <button
         onClick={() => setIsOpen(o => !o)}
         title={isOpen ? 'Close settings' : 'Open settings'}
-        className="flex-shrink-0 flex items-center justify-center border-l border-[var(--sidebar-border)] transition-colors duration-150"
+        className="flex-shrink-0 flex items-center justify-center transition-all duration-150 group"
         style={{
-          width: 40,
-          background: 'var(--muted)',
-          cursor: 'pointer',
+          alignSelf: 'center',
+          width: 20,
+          height: 56,
+          borderRadius: '6px 0 0 6px',
+          background: 'var(--accent)',
           border: 'none',
-          borderLeft: '1px solid var(--sidebar-border)',
+          cursor: 'pointer',
+          zIndex: 10,
         }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--border-light)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'var(--muted)')}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
-        <span style={{ fontSize: 13, color: 'var(--muted-foreground)', userSelect: 'none' }}>
-          {isOpen ? '‹' : '›'}
+        <span className="select-none" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-foreground)' }}>
+          {isOpen ? '›' : '‹'}
         </span>
       </button>
 
       {/* Collapsing settings panel — shrinks to 0, no content visible when closed */}
       <div
-        className="flex-shrink-0 border-l border-[var(--sidebar-border)] bg-[var(--toolbar-bg)]"
+        className="flex-shrink-0 bg-[var(--toolbar-bg)]"
         style={{
           width: isOpen ? 256 : 0,
           minWidth: isOpen ? 256 : 0,
           overflow: 'hidden',
+          borderLeft: '2px solid var(--accent)',
           transition: 'width 200ms ease-in-out, min-width 200ms ease-in-out',
         }}
       >
         <div style={{ width: 256, minWidth: 256, height: '100%', display: 'flex', flexDirection: 'column' }}>
-
-          {/* Panel header */}
-          <div style={{
-            display: 'flex', alignItems: 'center', height: 44, flexShrink: 0,
-            borderBottom: '1px solid var(--border-light)', padding: '0 16px',
-          }}>
-            <span style={{
-              fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase',
-              fontWeight: 700, color: 'var(--muted-foreground)', userSelect: 'none', whiteSpace: 'nowrap',
-            }}>
-              Reading Settings
-            </span>
-          </div>
 
           {/* Scrollable body */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
@@ -335,37 +314,37 @@ export default function ReadingPanel({
             />
           </StackRow>
 
-          <Row label="Size">
-            <Stepper
+          <StackRow label="Size">
+            <Slider
               value={style.fontScale}
               min={0.5} max={2.5} step={0.1}
               format={v => `${v.toFixed(1)}×`}
               onChange={v => set('fontScale', v)}
             />
-          </Row>
+          </StackRow>
 
           <SectionDivider />
 
           {/* ── Spacing ───────────────────────────────────── */}
           <SectionLabel>Spacing</SectionLabel>
 
-          <Row label="Line height">
-            <Stepper
+          <StackRow label="Line height">
+            <Slider
               value={style.lineHeight}
               min={1.0} max={3.0} step={0.1}
               format={v => v.toFixed(1)}
               onChange={v => set('lineHeight', v)}
             />
-          </Row>
+          </StackRow>
 
-          <Row label="Letter spacing">
-            <Stepper
+          <StackRow label="Letter spacing">
+            <Slider
               value={style.letterSpacing}
               min={-0.05} max={0.30} step={0.01}
               format={v => v === 0 ? '0' : (v > 0 ? `+${v.toFixed(2)}` : v.toFixed(2))}
               onChange={v => set('letterSpacing', v)}
             />
-          </Row>
+          </StackRow>
 
           <SectionDivider />
 
@@ -440,8 +419,8 @@ export default function ReadingPanel({
                     width: 40, height: 28, fontSize: 10, fontWeight: 700,
                     borderTop: 'none', borderBottom: 'none', borderRight: 'none',
                     borderLeft: i > 0 ? '1px solid var(--border-light)' : 'none',
-                    background: style.blurEnabled === v ? 'var(--foreground)' : 'transparent',
-                    color: style.blurEnabled === v ? 'var(--background)' : 'var(--foreground)',
+                    background: style.blurEnabled === v ? 'var(--accent)' : 'transparent',
+                    color: style.blurEnabled === v ? 'var(--accent-foreground)' : 'var(--foreground)',
                     cursor: 'pointer', userSelect: 'none',
                     transition: 'background 0.1s, color 0.1s',
                   }}

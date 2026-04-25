@@ -27,9 +27,9 @@ const DEFAULT_STYLE: DocStyle = {
   lineHeight: 1.5,
   letterSpacing: 0,
   fontWeight: 400,
-  textColor: '#1C1917',
-  backgroundColor: '#FAFAF9',
-  highlightColor: '#3B82F6',
+  textColor: '#F5F4F2',
+  backgroundColor: '#1C1917',
+  highlightColor: '#D97706',
   highlightOpacity: 0.25,
   blurEnabled: false,
 }
@@ -61,7 +61,7 @@ export default function PdfViewer({
   pages,
   pdfUrl,
 }: {
-  pdf: { id: string; name: string; page_count: number | null }
+  pdf: { id: string; name: string; page_count: number | null; storage_path: string }
   pages: PageData[]
   pdfUrl: string
 }) {
@@ -70,6 +70,9 @@ export default function PdfViewer({
   const [style, setStyle] = useState<DocStyle>(DEFAULT_STYLE)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [scrollToIndex, setScrollToIndex] = useState<{ index: number; key: number } | null>(null)
+  const sentenceCache = useRef<Record<number, (string[] | null)[]>>({})
+  const pendingSentencePages = useRef<Set<number>>(new Set())
+  const [sentenceRevision, setSentenceRevision] = useState(0)
   const totalPages = pdf.page_count ?? pages.length
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstLoad = useRef(true)
@@ -80,7 +83,7 @@ export default function PdfViewer({
 
   // Load saved settings on mount — localStorage first (instant), then Supabase (sync)
   useEffect(() => {
-    const cached = localStorage.getItem('pdfReaderStyle')
+    const cached = localStorage.getItem('pdfReaderStyle_v2')
     if (cached) {
       try { setStyle({ ...DEFAULT_STYLE, ...JSON.parse(cached) }) } catch {}
     }
@@ -97,7 +100,7 @@ export default function PdfViewer({
           if (data?.style) {
             const merged = { ...DEFAULT_STYLE, ...data.style }
             setStyle(merged)
-            localStorage.setItem('pdfReaderStyle', JSON.stringify(data.style))
+            localStorage.setItem('pdfReaderStyle_v2', JSON.stringify(merged))
           }
         })
     })
@@ -106,7 +109,7 @@ export default function PdfViewer({
   // Save settings whenever style changes (debounced 1s, skip first load)
   useEffect(() => {
     if (isFirstLoad.current) { isFirstLoad.current = false; return }
-    localStorage.setItem('pdfReaderStyle', JSON.stringify(style))
+    localStorage.setItem('pdfReaderStyle_v2', JSON.stringify(style))
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       const supabase = createClient()
@@ -130,8 +133,24 @@ export default function PdfViewer({
       .eq('pdf_id', pdf.id)
       .eq('page_number', pageNum)
       .single()
+
     if (data) {
       setPagesCache(prev => ({ ...prev, [data.page_number]: data.page_data }))
+    } else {
+      // Page not yet parsed — request on-demand parse from backend
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/parse/page`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdf_id: pdf.id, storage_path: pdf.storage_path, page_number: pageNum }),
+        })
+        if (res.ok) {
+          const { page_data } = await res.json()
+          setPagesCache(prev => ({ ...prev, [pageNum]: page_data }))
+        }
+      } catch {
+        // silently fail — user sees "No content for this page"
+      }
     }
   }
 
@@ -144,6 +163,65 @@ export default function PdfViewer({
   const currentPageData = pagesCache[currentPage]
     ? { page_number: currentPage, page_data: pagesCache[currentPage] }
     : null
+
+  function regexSplitSentences(text: string): string[] {
+    return text.split(/(?<=[.!?])\s+(?=[A-Z"'])/).map(s => s.trim()).filter(Boolean)
+  }
+
+  function blockTextFromEl(el: Element): string {
+    if (el.gemini_text) return el.gemini_text
+    return el.lines?.flatMap(l => l.spans.map(s => s.text)).join(' ').trim() ?? ''
+  }
+
+  async function fetchSentences(pageNum: number, elements: Element[]) {
+    if (pendingSentencePages.current.has(pageNum)) return
+    pendingSentencePages.current.add(pageNum)
+
+    // Immediately populate with regex split so UI is responsive
+    const initial: (string[] | null)[] = elements.map(el => {
+      if (el.type !== 'text_block') return null
+      const text = blockTextFromEl(el)
+      return text ? regexSplitSentences(text) : null
+    })
+    sentenceCache.current[pageNum] = initial
+    setSentenceRevision(r => r + 1)
+
+    // Fire LLM call for the whole page
+    const textBlocks = elements
+      .map((el, i) => ({ index: i, text: blockTextFromEl(el), type: el.type }))
+      .filter(b => b.type === 'text_block' && b.text)
+
+    if (!textBlocks.length) return
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sentences/split`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocks: textBlocks.map(b => ({ index: b.index, text: b.text })) }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+
+      const refined = [...initial]
+      for (const item of data.results ?? []) {
+        if (Array.isArray(item.sentences) && item.sentences.length > 0) {
+          refined[item.index] = item.sentences
+        }
+      }
+      sentenceCache.current[pageNum] = refined
+      setSentenceRevision(r => r + 1)
+    } catch {
+      // regex results already shown — silently ignore
+    }
+  }
+
+  // Fetch sentences for current page whenever page data is available
+  useEffect(() => {
+    const elements = pagesCache[currentPage]?.elements
+    if (!elements) return
+    if (sentenceCache.current[currentPage]) return
+    fetchSentences(currentPage, elements)
+  }, [currentPage, pagesCache])
 
   function goToPage(n: number) {
     const clamped = Math.max(1, Math.min(n, totalPages))
@@ -193,6 +271,8 @@ export default function PdfViewer({
                 activeIndex={activeIndex}
                 onSelect={setActiveIndex}
                 scrollToIndex={scrollToIndex}
+                viewMode="sentence"
+                pageSentences={sentenceRevision >= 0 ? (sentenceCache.current[currentPage] ?? null) : null}
               />
             ) : (
               <p className="text-sm text-[var(--muted-foreground)]">No content for this page.</p>
@@ -205,9 +285,9 @@ export default function PdfViewer({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center gap-4 px-5 border-t border-[var(--toolbar-border)] bg-[var(--toolbar-bg)]" style={{ height: 44 }}>
-        {/* Reading progress */}
-        <div className="flex-1 h-px bg-[var(--border-light)] relative overflow-hidden">
+      <div className="border-t border-[var(--toolbar-border)] bg-[var(--toolbar-bg)]">
+        {/* Full-width progress bar */}
+        <div className="h-0.5 bg-[var(--border-light)] relative">
           <div
             className="absolute left-0 top-0 h-full bg-[var(--accent)] transition-[width] duration-300 ease-out"
             style={{ width: `${(currentPage / totalPages) * 100}%` }}
@@ -215,7 +295,7 @@ export default function PdfViewer({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center justify-center gap-3 px-5" style={{ height: 44 }}>
           <button
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage <= 1}
@@ -244,9 +324,6 @@ export default function PdfViewer({
             →
           </button>
         </div>
-
-        {/* Mirror progress bar */}
-        <div className="flex-1 h-px bg-[var(--border-light)]" />
       </div>
     </div>
   )

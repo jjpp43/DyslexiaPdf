@@ -63,14 +63,16 @@ export default function PdfCanvasViewer({
     <div ref={containerRef} className="flex-1 overflow-auto">
       {containerWidth > 0 && (
         <div style={{ position: 'relative', width: containerWidth }}>
-          <Document file={pdfUrl} loading={null}>
-            <Page
-              pageNumber={pageNumber}
-              width={containerWidth}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          </Document>
+          <div style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
+            <Document file={pdfUrl} loading={null}>
+              <Page
+                pageNumber={pageNumber}
+                width={containerWidth}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            </Document>
+          </div>
 
           {/* Clickable overlay rects */}
           {pageData && (

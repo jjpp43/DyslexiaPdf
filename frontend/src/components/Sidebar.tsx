@@ -169,6 +169,7 @@ export default function Sidebar() {
           width: collapsed ? 0 : 256,
           minWidth: collapsed ? 0 : 256,
           overflow: 'hidden',
+          borderRight: '2px solid var(--accent)',
           transition: 'width 200ms ease-in-out, min-width 200ms ease-in-out',
         }}
       >
@@ -182,7 +183,7 @@ export default function Sidebar() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold tracking-widest uppercase border-2 border-[var(--accent)] text-[var(--accent)] bg-transparent hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] disabled:opacity-40 transition-colors duration-100 rounded-[var(--radius-sm)]"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold tracking-widest uppercase border-2 border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)] hover:opacity-85 disabled:opacity-40 transition-opacity duration-100 rounded-[var(--radius-sm)]"
           >
             <span className="text-sm leading-none">+</span>
             {uploading ? 'Uploading...' : 'Upload PDF'}
@@ -229,7 +230,7 @@ export default function Sidebar() {
                   key={pdf.id}
                   href={pdf.status === 'done' ? `/pdf/${pdf.id}` : '#'}
                   onContextMenu={e => handleContextMenu(e, pdf)}
-                  className={`w-full text-left px-2 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] truncate transition-colors duration-100 flex flex-col gap-0.5 rounded-[var(--radius-sm)] ${deleting === pdf.id ? 'opacity-40 pointer-events-none' : ''}`}
+                  className={`w-full text-left px-2 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--accent-subtle)] hover:text-[var(--foreground)] border-l-2 border-transparent hover:border-[var(--accent)] truncate transition-colors duration-100 flex flex-col gap-0.5 rounded-[var(--radius-sm)] ${deleting === pdf.id ? 'opacity-40 pointer-events-none' : ''}`}
                 >
                   <span className="truncate">{pdf.name}</span>
                   <span className="text-xs opacity-50">
@@ -263,16 +264,22 @@ export default function Sidebar() {
       <button
         onClick={() => setCollapsed(c => !c)}
         aria-label={collapsed ? 'Open sidebar' : 'Close sidebar'}
-        className="flex-shrink-0 flex items-center justify-center border-r border-[var(--sidebar-border)] transition-colors duration-150 group"
+        title={collapsed ? 'Open sidebar' : 'Close sidebar'}
+        className="flex-shrink-0 flex items-center justify-center transition-all duration-150 group"
         style={{
-          width: 32,
-          background: 'var(--muted)',
+          alignSelf: 'center',
+          width: 20,
+          height: 56,
+          borderRadius: '0 6px 6px 0',
+          background: 'var(--accent)',
+          border: 'none',
           cursor: 'pointer',
+          zIndex: 10,
         }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--border-light)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'var(--muted)')}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
-        <span className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] transition-colors duration-150 text-sm select-none">
+        <span className="select-none" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-foreground)' }}>
           {collapsed ? '›' : '‹'}
         </span>
       </button>

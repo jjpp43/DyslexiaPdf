@@ -11,6 +11,21 @@ def get_client():
         _client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     return _client
 
+SENTENCE_SPLIT_PROMPT = """You are a sentence splitter for PDF text. Split each block into individual sentences.
+
+Rules:
+- Split on sentence-ending punctuation (. ! ?) followed by a capital letter or quote
+- Keep abbreviations intact: Dr., Mr., Fig., e.g., i.e., U.S., etc.
+- Keep decimal numbers intact: 3.14, 2.5
+- Do NOT modify the text — only split it
+- If a block is already a single sentence, return it as a one-element array
+
+Return ONLY a JSON array, no explanation:
+[
+  { "index": 0, "sentences": ["First sentence.", "Second sentence."] },
+  ...
+]"""
+
 SYSTEM_PROMPT = """You are a document structure analyzer. Given text blocks extracted from a PDF page, do two things for each block:
 
 1. Classify it into one of: "heading", "subheading", "paragraph", "list_item", "caption", "footer", "other"
@@ -68,6 +83,47 @@ def heuristic_classify(block: dict) -> dict:
         block_type = "paragraph"
 
     return {"block_type": block_type, "text": text}
+
+
+def _regex_split_sentences(text: str) -> list[str]:
+    import re
+    parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"\'])', text)
+    return [s.strip() for s in parts if s.strip()]
+
+
+def split_sentences(blocks: list[dict]) -> list[dict]:
+    """
+    Split text blocks into sentences using Gemini.
+    Falls back to regex on any error.
+    blocks: [{ "index": int, "text": str }]
+    returns: [{ "index": int, "sentences": [str] }]
+    """
+    if not blocks:
+        return []
+
+    def regex_fallback():
+        return [{"index": b["index"], "sentences": _regex_split_sentences(b["text"])} for b in blocks]
+
+    try:
+        prompt = f"Split these text blocks into sentences:\n{json.dumps(blocks, ensure_ascii=False)}"
+        response = get_client().models.generate_content(
+            model="gemini-2.5-flash",
+            config=types.GenerateContentConfig(system_instruction=SENTENCE_SPLIT_PROMPT),
+            contents=prompt,
+        )
+        raw = response.text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        results = json.loads(raw)
+        # Ensure every input block has a result
+        covered = {r["index"] for r in results}
+        for b in blocks:
+            if b["index"] not in covered:
+                results.append({"index": b["index"], "sentences": _regex_split_sentences(b["text"])})
+        return results
+    except Exception as e:
+        print(f"[llm] Sentence split failed, using regex: {e}")
+        return regex_fallback()
 
 
 def classify_blocks(blocks: list[dict]) -> list[dict]:

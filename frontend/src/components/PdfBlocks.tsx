@@ -152,12 +152,16 @@ export default function PdfBlocks({
   activeIndex,
   onSelect,
   scrollToIndex,
+  viewMode = 'paragraph',
+  pageSentences = null,
 }: {
   page: PageData
   style: DocStyle
   activeIndex: number | null
   onSelect: (index: number | null) => void
   scrollToIndex: { index: number; key: number } | null
+  viewMode?: 'paragraph' | 'sentence'
+  pageSentences?: (string[] | null)[] | null
 }) {
   const isTwoCol = page.layout === 'two-column'
   const elementRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -209,15 +213,66 @@ export default function PdfBlocks({
 
   useEffect(() => {
     if (scrollToIndex === null) return
-    elementRefs.current[scrollToIndex.index]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    elementRefs.current[scrollToIndex.index]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [scrollToIndex])
 
   const indexed = page.elements.map((el, i) => ({ el, i }))
   const col0 = indexed.filter(({ el }) => el.column === 0)
   const col1 = indexed.filter(({ el }) => el.column === 1)
 
+  function blockStyle(isActive: boolean, extraCursor?: string) {
+    return {
+      position: 'relative' as const,
+      cursor: extraCursor ?? 'pointer',
+      backgroundColor: isActive ? hexToRgba(style.highlightColor, style.highlightOpacity * 0.5) : style.backgroundColor,
+      border: isActive
+        ? `1px solid ${hexToRgba(style.highlightColor, style.highlightOpacity + 0.2)}`
+        : '1px solid rgba(245,244,242,0.07)',
+      borderLeft: `3px solid ${isActive ? hexToRgba(style.highlightColor, Math.min(1, style.highlightOpacity + 0.4)) : 'rgba(245,244,242,0.08)'}`,
+      padding: '0.35rem 0.5rem',
+      borderRadius: 5,
+      boxShadow: isActive ? `0 2px 8px ${hexToRgba(style.highlightColor, 0.15)}` : '0 1px 3px rgba(0,0,0,0.3)',
+      filter: style.blurEnabled && activeIndex !== null && !isActive ? 'blur(2px) opacity(0.5)' : 'none',
+      marginBottom: '0.35rem',
+      transition: 'background-color 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s',
+    }
+  }
+
   function renderElement({ el, i }: { el: Element; i: number }) {
     const isActive = activeIndex === i
+
+    // Sentence mode: each sentence gets its own block card
+    if (viewMode === 'sentence' && el.type === 'text_block') {
+      const sentences = pageSentences?.[i] ?? null
+      if (sentences && sentences.length > 0) {
+        const textStyle = {
+          fontFamily: style.fontFamily,
+          fontWeight: style.fontWeight,
+          color: style.textColor,
+          lineHeight: style.lineHeight,
+          letterSpacing: style.letterSpacing ? `${style.letterSpacing}em` : undefined,
+          fontSize: style.fontScale * 14,
+          margin: 0,
+        }
+        return (
+          <div key={i}>
+            {sentences.map((sentence, si) => (
+              <div
+                key={si}
+                ref={si === 0 ? node => { elementRefs.current[i] = node } : undefined}
+                onMouseEnter={() => onSelect(i)}
+                onMouseLeave={() => onSelect(null)}
+                onClick={() => handleBlockClick(i, el)}
+                style={blockStyle(isActive)}
+              >
+                <p style={textStyle}>{sentence}</p>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    }
+
     return (
       <div
         key={i}
@@ -225,25 +280,7 @@ export default function PdfBlocks({
         onMouseEnter={() => onSelect(i)}
         onMouseLeave={() => onSelect(null)}
         onClick={() => handleBlockClick(i, el)}
-        style={{
-          position: 'relative',
-          cursor: el.type === 'text_block' ? 'pointer' : 'default',
-          backgroundColor: isActive ? hexToRgba(style.highlightColor, style.highlightOpacity * 0.5) : style.backgroundColor,
-          border: isActive
-            ? `1px solid ${hexToRgba(style.highlightColor, style.highlightOpacity + 0.2)}`
-            : '1px solid rgba(28,25,23,0.07)',
-          borderLeft: `3px solid ${isActive ? hexToRgba(style.highlightColor, Math.min(1, style.highlightOpacity + 0.4)) : 'rgba(28,25,23,0.08)'}`,
-          paddingLeft: '0.5rem',
-          borderRadius: 5,
-          boxShadow: isActive
-            ? `0 2px 8px ${hexToRgba(style.highlightColor, 0.15)}`
-            : '0 1px 3px rgba(28,25,23,0.05)',
-          filter: style.blurEnabled && activeIndex !== null && !isActive
-            ? 'blur(2px) opacity(0.5)'
-            : 'none',
-          marginBottom: '0.5rem',
-          transition: 'background-color 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s',
-        }}
+        style={blockStyle(isActive, el.type === 'text_block' ? 'pointer' : 'default')}
       >
         {el.type === 'image' && <ImageBlock el={el} />}
         {el.type === 'table' && <TableBlock el={el} style={style} />}

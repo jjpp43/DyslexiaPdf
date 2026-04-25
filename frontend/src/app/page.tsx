@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/auth/actions";
-import BeforeAfter from "@/app/BeforeAfter";
 
 export default async function LandingPage() {
   const supabase = await createClient();
@@ -95,12 +94,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Section rule */}
-      <div className="h-1 bg-[var(--foreground)]" />
-
-      {/* Before / After */}
-      <BeforeAfter />
 
       {/* Section rule */}
       <div className="h-1 bg-[var(--foreground)]" />

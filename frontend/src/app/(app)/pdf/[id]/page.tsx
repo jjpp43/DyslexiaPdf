@@ -28,7 +28,7 @@ export default async function PdfPage({ params }: { params: Promise<{ id: string
 
   return (
     <PdfViewer
-      pdf={{ id: pdf.id, name: pdf.name, page_count: pdf.page_count }}
+      pdf={{ id: pdf.id, name: pdf.name, page_count: pdf.page_count, storage_path: pdf.storage_path }}
       pages={initialPages ?? []}
       pdfUrl={signed?.signedUrl ?? ''}
     />
